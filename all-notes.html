@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Notes Saved - Kai's Notebook</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to right, #ff7e5f, #feb47b); /* Same colorful gradient background */
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin-top: 50px;
+        }
+
+        .note-item {
+            background-color: rgba(248, 249, 250, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .note-item button {
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+
+        /* Button colors */
+        .view-note-btn {
+            background-color: #007bff; /* Blue */
+            color: white;
+            border: none;
+        }
+
+        .edit-btn {
+            background-color: #28a745; /* Green */
+            color: white;
+            border: none;
+        }
+
+        .delete-btn {
+            background-color: #dc3545; /* Red */
+            color: white;
+            border: none;
+        }
+
+        .note-list {
+            margin-top: 20px;
+        }
+
+        /* Styles for editing and viewing note content */
+        .note-content-box {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .save-edit-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .cancel-edit-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .view-note-btn, .edit-btn, .delete-btn {
+            width: 80px;
+            font-size: 0.9rem;
+        }
+
+        .note-buttons {
+            display: flex;
+            justify-content: flex-start;
+            gap: 10px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 class="text-center text-white">All Saved Notes</h2>
+    
+    <!-- Display saved notes list -->
+    <div class="note-list" id="noteList">
+        <!-- Notes will be dynamically loaded here -->
+    </div>
+
+    <!-- Box for editing note -->
+    <div id="noteContentBox" class="note-content-box" style="display: none;">
+        <h4>Edit Note</h4>
+        <div class="form-group">
+            <label for="editTitle">Title</label>
+            <input type="text" class="form-control" id="editTitle" placeholder="Edit title">
+        </div>
+        <div class="form-group">
+            <label for="editContent">Content</label>
+            <textarea class="form-control" id="editContent" placeholder="Edit your note here..."></textarea>
+        </div>
+        <button class="save-edit-btn" id="saveEditButton">Save Changes</button>
+        <button class="cancel-edit-btn" id="cancelEditButton">Cancel</button>
+    </div>
+
+    <a href="index.html" class="btn btn-secondary mt-3">Back to Main Page</a>
+</div>
+
+<script>
+// Ensure the user is logged in
+if (!localStorage.getItem('loggedIn')) {
+    window.location.href = 'login.html'; // Redirect to login page if not logged in
+}
+
+// Get the currently logged-in user
+const loggedInUser = localStorage.getItem('loggedInUser');
+
+// Load the user's saved notes from localStorage
+function loadNotes() {
+    const userNotesKey = loggedInUser + '_notes'; // Create a unique key for each user
+    const savedNotes = JSON.parse(localStorage.getItem(userNotesKey)) || [];
+    const noteListContainer = document.getElementById('noteList');
+    noteListContainer.innerHTML = '<h4>Saved Notes:</h4>';
+
+    if (savedNotes.length === 0) {
+        noteListContainer.innerHTML = '<p>No notes found.</p>';
+    } else {
+        savedNotes.forEach((note, index) => {
+            const noteItem = document.createElement('div');
+            noteItem.classList.add('note-item');
+            noteItem.innerHTML = `${note.title}
+                                  <div class="note-buttons">
+                                      <button class="view-note-btn" data-index="${index}">View</button>
+                                      <button class="edit-btn" data-index="${index}">Edit</button>
+                                      <button class="delete-btn" data-index="${index}">Delete</button>
+                                  </div>`;
+
+            // View button functionality
+            const viewBtn = noteItem.querySelector('.view-note-btn');
+            viewBtn.addEventListener('click', function() {
+                viewNoteContent(note);
+            });
+
+            // Edit button functionality
+            const editBtn = noteItem.querySelector('.edit-btn');
+            editBtn.addEventListener('click', function() {
+                showEditBox(note, index);
+            });
+
+            // Delete button functionality
+            const deleteBtn = noteItem.querySelector('.delete-btn');
+            deleteBtn.addEventListener('click', function(e) {
+                e.stopPropagation(); 
+                deleteNoteFromLocalStorage(index);
+            });
+
+            noteListContainer.appendChild(noteItem);
+        });
+    }
+}
+
+// Function to display the note content when clicked
+function viewNoteContent(note) {
+    const noteContentBox = document.createElement('div');
+    noteContentBox.classList.add('note-content-box');
+    noteContentBox.innerHTML = `
+        <h4>${note.title}</h4>
+        <p>${note.content}</p>
+        <button class="cancel-edit-btn" onclick="closeView()">Close</button>
+    `;
+    document.body.appendChild(noteContentBox);
+}
+
+// Function to close the view note content
+function closeView() {
+    const noteContentBox = document.querySelector('.note-content-box');
+    if (noteContentBox) {
+        noteContentBox.remove();
+    }
+}
+
+// Function to show the edit box with current note data
+function showEditBox(note, index) {
+    document.getElementById('noteContentBox').style.display = 'block';
+    document.getElementById('editTitle').value = note.title;
+    document.getElementById('editContent').value = note.content;
+    document.getElementById('saveEditButton').setAttribute('data-index', index); // Pass index to save button
+}
+
+// Save the edited note
+document.getElementById('saveEditButton').addEventListener('click', function() {
+    const index = this.getAttribute('data-index');
+    const newTitle = document.getElementById('editTitle').value;
+    const newContent = document.getElementById('editContent').value;
+
+    if (newTitle && newContent) {
+        const userNotesKey = loggedInUser + '_notes';
+        const savedNotes = JSON.parse(localStorage.getItem(userNotesKey)) || [];
+        savedNotes[index] = { title: newTitle, content: newContent }; // Update the note
+        localStorage.setItem(userNotesKey, JSON.stringify(savedNotes)); // Save updated notes
+        loadNotes(); // Re-load notes
+        document.getElementById('noteContentBox').style.display = 'none'; // Hide the edit box
+    } else {
+        alert('Please fill in both title and content.');
+    }
+});
+
+// Cancel the edit action
+document.getElementById('cancelEditButton').addEventListener('click', function() {
+    document.getElementById('noteContentBox').style.display = 'none'; // Hide the edit box
+});
+
+// Function to delete a note from localStorage
+function deleteNoteFromLocalStorage(index) {
+    const userNotesKey = loggedInUser + '_notes';
+    const savedNotes = JSON.parse(localStorage.getItem(userNotesKey)) || [];
+    savedNotes.splice(index, 1); // Remove the note from the array
+    localStorage.setItem(userNotesKey, JSON.stringify(savedNotes)); // Update the saved notes
+    loadNotes(); // Re-load the notes to reflect changes
+}
+
+// Initial load of notes
+loadNotes();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,60 @@
+body {
+    background-image: url('background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.notebook {
+    background-color: rgba(255, 255, 255, 0.7);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    max-width: 800px;
+    margin: 100px auto;
+}
+
+.notebook-header {
+    background-color: rgba(52, 58, 64, 0.9);
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.8rem;
+}
+
+button {
+    border-radius: 8px;
+}
+
+.save-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.note-item {
+    background-color: rgba(248, 249, 250, 0.9);
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+}
+
+.delete-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.back-btn {
+    margin-top: 15px;
+    width: 100%;
+    background-color: #6c757d;
+    color: white;
+}

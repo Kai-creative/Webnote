@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            font-family: 'Arial', sans-serif;
+        }
+
+        .container {
+            max-width: 900px;
+            margin-top: 40px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .logout-btn, .reset-btn, .view-users-btn {
+            background-color: #ff7e5f;
+            color: white;
+            font-size: 1rem;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover, .reset-btn:hover, .view-users-btn:hover {
+            background-color: #feb47b;
+        }
+
+        .delete-note-btn, .view-note-btn {
+            margin-top: 10px;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            background-color: red;
+            color: white;
+            border: none;
+        }
+
+        .view-note-btn {
+            background-color: #007bff;
+        }
+
+        .delete-note-btn:hover, .view-note-btn:hover {
+            background-color: #cc0000;
+        }
+
+        .delete-all-notes-btn {
+            background-color: #dc3545;
+            color: white;
+            margin-top: 15px;
+        }
+
+        .delete-all-notes-btn:hover {
+            background-color: #c82333;
+        }
+
+        .user-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .user-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .user-list-modal .modal-body ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .user-list-modal .modal-body ul li {
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .delete-user-btn {
+            background-color: #dc3545;
+            color: white;
+            font-size: 0.9rem;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .delete-user-btn:hover {
+            background-color: #c82333;
+        }
+
+        /* New modal styling for viewing a note */
+        .view-note-modal .modal-body {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 class="text-center">Admin Dashboard</h2>
+    <h4>Users with Notes</h4>
+
+    <!-- Users Notes Section -->
+    <div id="usersList"></div>
+
+    <!-- Buttons for Admin Actions -->
+    <button class="view-users-btn" onclick="openUserList()">View Users List</button>
+    <button class="delete-all-notes-btn" onclick="deleteAllNotes()">Delete All Notes for All Users</button>
+    <button class="reset-btn" onclick="window.location.href='reset-user-data.html'">Go to Reset All User Data</button>
+    <button class="logout-btn" onclick="logout()">Log Out</button>
+</div>
+
+<!-- Modal for Viewing Users List -->
+<div class="modal fade" id="userListModal" tabindex="-1" role="dialog" aria-labelledby="userListModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="userListModalLabel">User List</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body user-list-modal">
+        <h5>Total Users: <span id="totalUsersCount">0</span></h5>
+        <ul id="userListContainer">
+            <!-- User list will be populated here -->
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for Viewing Note -->
+<div class="modal fade" id="viewNoteModal" tabindex="-1" role="dialog" aria-labelledby="viewNoteModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewNoteModalLabel">View Note</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body view-note-modal">
+        <h5 id="viewNoteTitle"></h5>
+        <p id="viewNoteContent"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Check if the logged-in user is an admin
+function checkAdminLogin() {
+    const loggedInUser = localStorage.getItem('loggedInUser');
+    const userRole = localStorage.getItem('userRole');
+
+    if (!loggedInUser || userRole !== 'admin') {
+        window.location.href = 'login.html'; // Redirect if not an admin
+    }
+}
+
+// Display users who have saved notes
+function displayUsersWithNotes() {
+    const usersListContainer = document.getElementById('usersList');
+    usersListContainer.innerHTML = '';
+
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+
+    if (users.length === 0) {
+        usersListContainer.innerHTML = '<p>No users found.</p>';
+        return;
+    }
+
+    users.forEach(user => {
+        const userNotes = JSON.parse(localStorage.getItem(`${user.username}_notes`)) || [];
+        
+        // Only display users who have saved notes
+        if (userNotes.length > 0) {
+            const userSection = document.createElement('div');
+            userSection.classList.add('user-section');
+
+            // Add user's name as a heading
+            const userName = document.createElement('h5');
+            userName.classList.add('user-name');
+            userName.textContent = user.username;
+            userSection.appendChild(userName);
+
+            // List notes
+            userNotes.forEach((note, index) => {
+                const noteItem = document.createElement('div');
+                noteItem.innerHTML = ` 
+                    <p>${note.title}: ${note.content}</p>
+                    <button class="view-note-btn" onclick="viewNote('${user.username}', ${index})">View Note</button>
+                    <button class="delete-note-btn" onclick="deleteNote('${user.username}', ${index})">Delete Note</button>
+                `;
+                userSection.appendChild(noteItem);
+            });
+
+            usersListContainer.appendChild(userSection);
+        }
+    });
+}
+
+// Open User List Modal
+function openUserList() {
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const userListContainer = document.getElementById('userListContainer');
+    const totalUsersCount = document.getElementById('totalUsersCount');
+
+    userListContainer.innerHTML = ''; // Clear the previous list
+    totalUsersCount.textContent = users.length; // Display total number of users
+
+    users.forEach(user => {
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `
+            <span>${user.username}</span>
+            <button class="delete-user-btn" onclick="deleteUser('${user.username}')">Delete</button>
+        `;
+        userListContainer.appendChild(listItem);
+    });
+
+    // Show the modal
+    $('#userListModal').modal('show');
+}
+
+// Delete a specific user
+function deleteUser(username) {
+    if (confirm(`Are you sure you want to delete the user ${username}?`)) {
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        // Remove the user from the list
+        users = users.filter(user => user.username !== username);
+        localStorage.setItem('users', JSON.stringify(users));
+
+        // Remove user notes
+        localStorage.removeItem(`${username}_notes`);
+
+        alert(`User ${username} has been deleted.`);
+        openUserList(); // Refresh the user list in the modal
+    }
+}
+
+// View note function
+function viewNote(username, noteIndex) {
+    const userNotes = JSON.parse(localStorage.getItem(`${username}_notes`)) || [];
+    const note = userNotes[noteIndex];
+
+    // Display note content in the modal
+    document.getElementById('viewNoteTitle').textContent = note.title;
+    document.getElementById('viewNoteContent').textContent = note.content;
+
+    // Show the modal
+    $('#viewNoteModal').modal('show');
+}
+
+// Delete a specific note for a user
+function deleteNote(username, noteIndex) {
+    const userNotes = JSON.parse(localStorage.getItem(`${username}_notes`)) || [];
+    userNotes.splice(noteIndex, 1); // Remove the selected note
+    localStorage.setItem(`${username}_notes`, JSON.stringify(userNotes));
+
+    alert(`Note deleted for ${username}.`);
+    displayUsersWithNotes();
+}
+
+// Delete all notes for all users
+function deleteAllNotes() {
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+
+    // Remove notes for each user
+    users.forEach(user => {
+        localStorage.removeItem(`${user.username}_notes`);
+    });
+
+    alert('All notes for all users have been deleted.');
+    displayUsersWithNotes();
+}
+
+// Log out function
+function logout() {
+    localStorage.removeItem('loggedInUser');
+    localStorage.removeItem('userRole');
+    window.location.href = 'login.html';
+}
+
+// Initialize
+checkAdminLogin();
+displayUsersWithNotes();
+</script>
+
+<!-- Bootstrap JS and dependencies -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.10/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>

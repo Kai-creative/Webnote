@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notebook - Login</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .login-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 80px auto;
+        }
+
+        .login-header {
+            background-color: #ff7e5f;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .login-btn {
+            width: 100%;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            background-color: #ff7e5f;
+            color: white;
+            border: none;
+            transition: background-color 0.3s;
+        }
+
+        .login-btn:hover {
+            background-color: #feb47b;
+        }
+
+        .error-message {
+            color: red;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .register-link a {
+            color: #ff7e5f;
+            font-weight: bold;
+        }
+
+        .register-link a:hover {
+            color: #feb47b;
+        }
+
+        .role-select {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="login-container">
+        <div class="login-header">Login Your Account</div>
+
+        <!-- Login Form -->
+        <div class="form-area">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" class="form-control" id="username" placeholder="Enter your username">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" class="form-control" id="password" placeholder="Enter your password">
+            </div>
+
+            <div class="form-group role-select">
+                <label for="role">Role</label>
+                <select class="form-control" id="role">
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+
+            <button class="login-btn" id="loginButton">Login</button>
+
+            <!-- Error message -->
+            <div id="errorMessage" class="error-message" style="display:none;">
+                Invalid login credentials.
+            </div>
+        </div>
+
+        <div class="register-link">
+            <a href="register.html">Don't have an account? Register here</a>
+        </div>
+    </div>
+</div>
+
+<script>
+// Check for previously logged-in user
+document.getElementById('loginButton').addEventListener('click', function() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const role = document.getElementById('role').value;
+
+    // Retrieve users from localStorage
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+
+    // Validate user credentials
+    const user = users.find(user => user.username === username && user.password === password && user.role === role);
+
+    if (user) {
+        // Store login status and username
+        localStorage.setItem('loggedIn', true);
+        localStorage.setItem('loggedInUser', username);
+        localStorage.setItem('userRole', role);
+
+        // Redirect based on role
+        if (role === 'admin') {
+            window.location.href = 'admin-dashboard.html'; // Redirect to Admin Dashboard if admin
+        } else {
+            window.location.href = 'index.html'; // Redirect to user page
+        }
+    } else {
+        // Display error message if credentials are invalid
+        document.getElementById('errorMessage').style.display = 'block';
+    }
+});
+</script>
+
+</body>
+</html>
